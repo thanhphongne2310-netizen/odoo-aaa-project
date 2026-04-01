@@ -10,6 +10,6 @@ RUN mkdir -p /mnt/extra-addons
 COPY ./custom_addons /mnt/extra-addons
 
 # Phân quyền cho user Odoo
-RUN chown -R odoo:odoo /mnt/extra-addons
-
+# ... (đoạn code cũ)
+RUN chown -R odoo:odoo /var/lib/odoo
 USER odoo
