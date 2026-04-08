@@ -14,6 +14,7 @@
                         </group>
                         <group>
                             <field name="actual_revenue"/>
+                            <field name="target_revenue"/>
                             <field name="commission_rate"/>
                             <field name="commission_amount"/>
                         </group>

@@ -8,6 +8,7 @@ class KPIRecord(models.Model):
     employee_id = fields.Many2one('hr.employee', string='Nhân viên', required=True)
     department_id = fields.Many2one(related='employee_id.department_id', string='Phòng ban', store=True)
     actual_revenue = fields.Float(string='Doanh thu thực tế', required=True, default=0.0)
+    target_revenue = fields.Float(string='Chỉ tiêu Doanh thu', required=True, default=40000000)
     commission_rate = fields.Float(string='Tỷ lệ Hoa hồng (%)', default=5.0)
     commission_amount = fields.Float(string='Tiền Hoa hồng', compute='_compute_commission', store=True)
 
