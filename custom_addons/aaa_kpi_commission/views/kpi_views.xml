@@ -8,11 +8,8 @@
                 
                 <header>
                     <button name="action_submit" string="Gửi duyệt" type="object" class="oe_highlight" invisible="state != 'draft'"/>
-                    
                     <button name="action_approve" string="Phê duyệt" type="object" class="oe_highlight" invisible="state != 'waiting'"/>
-                    
                     <button name="action_reject" string="Từ chối" type="object" invisible="state != 'waiting'"/>
-                    
                     <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved"/>
                 </header>
 
@@ -30,7 +27,14 @@
                             <field name="commission_amount"/>
                         </group>
                     </group>
-                </sheet>
+                </sheet> 
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+                
             </form>
         </field>
     </record>
