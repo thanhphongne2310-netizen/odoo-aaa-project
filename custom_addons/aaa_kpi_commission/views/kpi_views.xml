@@ -39,17 +39,22 @@
         </field>
     </record>
 
-    <record id="view_kpi_commission_tree" model="ir.ui.view">
+ <record id="view_kpi_commission_tree" model="ir.ui.view">
         <field name="name">kpi.commission.tree</field>
         <field name="model">kpi.commission</field>
         <field name="arch" type="xml">
-            <tree string="Danh sách KPI">
+            <tree string="Danh sách KPI" default_order="id desc">
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="department_id"/>
                 <field name="actual_revenue"/>
                 <field name="commission_rate"/>
                 <field name="commission_amount"/>
+                
+                <field name="state" widget="badge" 
+                       decoration-muted="state == 'draft'"
+                       decoration-warning="state == 'waiting'" 
+                       decoration-success="state == 'approved'"/>
             </tree>
         </field>
     </record>
