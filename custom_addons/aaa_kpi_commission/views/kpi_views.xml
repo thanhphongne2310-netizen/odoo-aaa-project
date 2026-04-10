@@ -9,9 +9,9 @@
               <header>
     <button name="action_submit" string="Gửi duyệt" type="object" class="oe_highlight" invisible="state != 'draft'"/>
     
-    <button name="action_approve" string="Phê duyệt" type="object" class="oe_highlight" invisible="state != 'waiting'" groups="hr.group_hr_manager"/>
+    <button name="action_approve" string="Phê duyệt" type="object" class="oe_highlight" invisible="state != 'waiting'" groups="hr.group_hr_manager,hr.group_payroll_manager"/>
     
-    <button name="action_reject" string="Từ chối" type="object" invisible="state != 'waiting'" "hr.group_payroll_manager"/>
+    <button name="action_reject" string="Từ chối" type="object" invisible="state != 'waiting'" groups="hr.group_hr_manager,hr.group_payroll_manager"/>
     
     <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved"/>
 </header>
