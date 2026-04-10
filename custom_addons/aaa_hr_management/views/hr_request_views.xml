@@ -13,9 +13,22 @@
                 </header>
                 <sheet>
                     <group>
-                        <field name="employee_id"/>
-                        <field name="request_type"/>
-                        <field name="content"/>
+                        <group>
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="request_type" widget="radio" readonly="state != 'draft'"/>
+                        </group>
+                        
+                        <group string="Dữ liệu cần cập nhật" invisible="request_type != 'profile'">
+                            <field name="new_department_id" readonly="state != 'draft'" options="{'no_create': True}"/>
+                            <field name="new_job_id" readonly="state != 'draft'" options="{'no_create': True}"/>
+                            <field name="new_parent_id" readonly="state != 'draft'" options="{'no_create': True}"/>
+                            <field name="new_work_email" readonly="state != 'draft'"/>
+                            <field name="new_work_phone" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="content" readonly="state != 'draft'" placeholder="Nhập chi tiết lỗi vi phạm hoặc ghi chú lý do thay đổi hồ sơ..."/>
                     </group>
                 </sheet>
                 <div class="oe_chatter">

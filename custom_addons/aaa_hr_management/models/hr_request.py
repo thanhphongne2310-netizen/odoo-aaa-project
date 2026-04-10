@@ -11,7 +11,16 @@ class HrUpdateRequest(models.Model):
         ('violation', 'Ghi nhận vi phạm')
     ], string='Loại yêu cầu', required=True, tracking=True)
     
-    content = fields.Text(string='Nội dung yêu cầu/Vi phạm', required=True)
+    # Giữ lại trường content để ghi chú vi phạm
+    content = fields.Text(string='Nội dung yêu cầu/Vi phạm')
+    
+    # --- THÊM 5 TRƯỜNG DỮ LIỆU CẤU TRÚC ĐỂ ĐỒNG BỘ ---
+    new_department_id = fields.Many2one('hr.department', string='Phòng ban mới', tracking=True)
+    new_job_id = fields.Many2one('hr.job', string='Vị trí công việc mới', tracking=True)
+    new_parent_id = fields.Many2one('hr.employee', string='Người quản lý mới', tracking=True)
+    new_work_email = fields.Char(string='Email công tác mới', tracking=True)
+    new_work_phone = fields.Char(string='SĐT công tác mới', tracking=True)
+
     state = fields.Selection([
         ('draft', 'Nháp'),
         ('waiting', 'Chờ phê duyệt'),
@@ -28,18 +37,36 @@ class HrUpdateRequest(models.Model):
     # Nút Phê duyệt (HR thực hiện - Xử lý đa nhiệm)
     def action_approve(self):
         for rec in self:
-            # NHÁNH 1: Tự động cập nhật dữ liệu hồ sơ nhân sự
+            # NHÁNH 1: TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU SANG MODULE NHÂN SỰ
             if rec.request_type == 'profile':
-                rec.employee_id.message_post(body=f"Cập nhật hồ sơ mới: {rec.content}")
-            
-            # NHÁNH 2: Lưu dữ liệu vi phạm (Có thể tạo model riêng hoặc lưu vào note)
+                update_data = {}
+                
+                # Kiểm tra xem ô nào có nhập dữ liệu thì mới đưa vào giỏ hàng update_data
+                if rec.new_department_id:
+                    update_data['department_id'] = rec.new_department_id.id
+                if rec.new_job_id:
+                    update_data['job_id'] = rec.new_job_id.id
+                if rec.new_parent_id:
+                    update_data['parent_id'] = rec.new_parent_id.id
+                if rec.new_work_email:
+                    update_data['work_email'] = rec.new_work_email
+                if rec.new_work_phone:
+                    update_data['work_phone'] = rec.new_work_phone
+                
+                # Thực thi cập nhật thẳng vào Database nhân viên trong 1 lệnh duy nhất
+                if update_data:
+                    rec.employee_id.write(update_data)
+                
+                rec.employee_id.message_post(body=f"🔄 Hệ thống đã tự động đồng bộ hồ sơ từ phiếu yêu cầu.")
+
+            # NHÁNH 2: Lưu dữ liệu vi phạm
             if rec.request_type == 'violation':
-                # Giả lập lưu vào lịch sử nhân viên
+                # Ghi nối thêm vi phạm vào phần Ghi chú của nhân viên
                 rec.employee_id.notes = (rec.employee_id.notes or "") + f"\n- Vi phạm: {rec.content}"
 
             rec.state = 'approved'
             # TỰ ĐỘNG GỬI THÔNG BÁO HOÀN TẤT
-            rec.message_post(body="✅ Phê duyệt thành công. Dữ liệu đã được cập nhật vào hồ sơ!")
+            rec.message_post(body="✅ Phê duyệt thành công. Dữ liệu đã ĐỒNG BỘ vào hồ sơ gốc!")
 
     # Nút Từ chối
     def action_refuse(self):
