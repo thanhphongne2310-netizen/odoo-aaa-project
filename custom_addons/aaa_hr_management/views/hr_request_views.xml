@@ -1,25 +1,52 @@
-<record id="view_hr_request_form" model="ir.ui.view">
-    <field name="name">hr.update.request.form</field>
-    <field name="model">hr.update.request</field>
-    <field name="arch" type="xml">
-        <form>
-            <header>
-                <button name="action_submit" string="Gửi yêu cầu" type="object" class="oe_highlight" invisible="state != 'draft'"/>
-                <button name="action_approve" string="Phê duyệt" type="object" class="oe_highlight" invisible="state != 'waiting'" groups="hr.group_hr_user"/>
-                <button name="action_refuse" string="Từ chối" type="object" invisible="state != 'waiting'" groups="hr.group_hr_user"/>
-                <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved"/>
-            </header>
-            <sheet>
-                <group>
-                    <field name="employee_id"/>
-                    <field name="request_type"/>
-                    <field name="content"/>
-                </group>
-            </sheet>
-            <div class="oe_chatter">
-                <field name="message_follower_ids"/>
-                <field name="message_ids"/>
-            </div>
-        </form>
-    </field>
-</record>
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_request_form" model="ir.ui.view">
+        <field name="name">hr.update.request.form</field>
+        <field name="model">hr.update.request</field>
+        <field name="arch" type="xml">
+            <form string="Yêu cầu Cập nhật/Vi phạm">
+                <header>
+                    <button name="action_submit" string="Gửi yêu cầu" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Phê duyệt" type="object" class="oe_highlight" invisible="state != 'waiting'" groups="hr.group_hr_user"/>
+                    <button name="action_refuse" string="Từ chối" type="object" invisible="state != 'waiting'" groups="hr.group_hr_user"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="employee_id"/>
+                        <field name="request_type"/>
+                        <field name="content"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_request_tree" model="ir.ui.view">
+        <field name="name">hr.update.request.tree</field>
+        <field name="model">hr.update.request</field>
+        <field name="arch" type="xml">
+            <tree string="Danh sách Yêu cầu">
+                <field name="employee_id"/>
+                <field name="request_type"/>
+                <field name="state" widget="badge" 
+                       decoration-muted="state == 'draft'"
+                       decoration-warning="state == 'waiting'" 
+                       decoration-success="state == 'approved'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_hr_update_request" model="ir.actions.act_window">
+        <field name="name">Xử lý Yêu cầu Nhân sự</field>
+        <field name="res_model">hr.update.request</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_hr_request_root" name="Yêu cầu Nhân sự" sequence="20"/>
+    <menuitem id="menu_hr_request_action" name="Danh sách yêu cầu" parent="menu_hr_request_root" action="action_hr_update_request" sequence="1"/>
+</odoo>
