@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_kpi_commission,kpi.commission,aaa_kpi_commission.model_kpi_commission,,1,1,1,1
+access_kpi_record,kpi.record.access,model_kpi_record,base.group_user,1,1,1,1
+access_kpi_record_line,kpi.record.line.access,model_kpi_record_line,base.group_user,1,1,1,1
