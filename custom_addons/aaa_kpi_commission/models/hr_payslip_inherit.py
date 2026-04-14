@@ -1,5 +1,4 @@
-from . import kpi_record
-from . import hr_payslip_inherit
+from odoo import models, fields, api
 
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip' # Lệnh bám vào module Bảng lương gốc
