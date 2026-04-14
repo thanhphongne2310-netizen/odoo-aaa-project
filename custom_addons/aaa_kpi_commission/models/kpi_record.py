@@ -41,7 +41,32 @@ class KpiRecordLine(models.Model):
     commission_rate = fields.Float(string='Tỷ lệ HH (%)')
     commission_amount = fields.Float(string='Tiền hoa hồng', compute='_compute_line_commission', store=True)
 
-    @api.depends('revenue', 'commission_rate')
-    def _compute_line_commission(self):
-        for line in self:
-            line.commission_amount = line.revenue * (line.commission_rate / 100.0)
+# ... (các đoạn code ở trên giữ nguyên) ...
+
+    @api.depends('line_ids.revenue', 'line_ids.commission_amount')
+    def _compute_totals(self):
+        for rec in self:
+            rec.actual_revenue = sum(line.revenue for line in rec.line_ids)
+            rec.total_commission = sum(line.commission_amount for line in rec.line_ids)
+
+    # =========================================================
+    # THÊM 3 HÀM DƯỚI ĐÂY ĐỂ ODOO NHẬN DIỆN ĐƯỢC NÚT BẤM
+    # =========================================================
+    def action_submit(self):
+        for rec in self:
+            rec.state = 'waiting'
+            rec.message_post(body="🚀 Đã gửi bảng kê hoa hồng. Chờ Quản lý phê duyệt.")
+
+    def action_approve(self):
+        for rec in self:
+            rec.state = 'approved'
+            rec.message_post(body="✅ Bảng kê hoa hồng đã được phê duyệt thành công.")
+
+    def action_reject(self):
+        for rec in self:
+            rec.state = 'draft' # Đẩy về lại trạng thái Nháp để kế toán sửa lại file
+            rec.message_post(body="❌ Bảng kê bị từ chối. Vui lòng kiểm tra lại số liệu Excel.")
+
+# Lớp con lưu trữ từng dòng hợp đồng bảo hiểm (Giữ nguyên như cũ)
+class KpiRecordLine(models.Model):
+    # ...
