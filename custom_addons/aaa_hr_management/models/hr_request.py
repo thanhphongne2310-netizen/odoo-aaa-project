@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError # <--- THÊM DÒNG NÀY VÀO TRÊN CÙNG
 
 class HrUpdateRequest(models.Model):
     _name = 'hr.update.request'
@@ -87,3 +88,17 @@ class HrUpdateRequest(models.Model):
         for rec in self:
             rec.state = 'refused'
             rec.message_post(body="❌ Yêu cầu bị từ chối do dữ liệu không hợp lệ.")
+    # ... (các field dữ liệu cũ của bạn giữ nguyên) ...
+
+    # ========================================================
+    # CHỐT CHẶN BẢO MẬT: KIỂM TRA QUYỀN TẠO PHIẾU VI PHẠM
+    # ========================================================
+    @api.constrains('request_type')
+    def _check_violation_permission(self):
+        for rec in self:
+            # Nếu phiếu này được chọn là "Ghi nhận vi phạm"
+            if rec.request_type == 'violation':
+                # Kiểm tra xem User đang thao tác có nhóm Quản trị viên HR không
+                if not self.env.user.has_group('hr.group_hr_manager'):
+                    # Nếu KHÔNG CÓ quyền -> Chặn đứng hệ thống và báo lỗi
+                    raise ValidationError("🛑 LỖI PHÂN QUYỀN: Bạn là Nhân viên, không có quyền tạo phiếu Ghi nhận vi phạm! Chức năng này chỉ dành cho Quản lý.")
