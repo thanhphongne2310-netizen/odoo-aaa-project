@@ -5,17 +5,20 @@
         <field name="model">hr.update.request</field>
         <field name="arch" type="xml">
             <form string="Yêu cầu Cập nhật/Vi phạm">
-               <header>
-                    <button name="action_approve" string="Phê duyệt" type="object" class="oe_highlight" 
-                            invisible="state != 'waiting'" 
-                            groups="hr.group_hr_manager"/>
-                            
-                    <button name="action_refuse" string="Từ chối" type="object" 
-                            invisible="state != 'waiting'" 
-                            groups="hr.group_hr_manager"/>
-                            
-                    <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved"/>
-                </header>
+              <header>
+    <button name="action_submit" string="Gửi yêu cầu" type="object" class="oe_highlight" 
+            invisible="state != 'draft'"/>
+    
+    <button name="action_approve" string="Phê duyệt" type="object" class="oe_highlight" 
+            invisible="state != 'waiting'" 
+            groups="hr.group_hr_manager"/>
+            
+    <button name="action_reject" string="Từ chối" type="object" 
+            invisible="state != 'waiting'" 
+            groups="hr.group_hr_manager"/>
+    
+    <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved"/>
+</header>
                 <sheet>
                     <group>
                         <group>

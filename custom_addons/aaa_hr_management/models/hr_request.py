@@ -28,20 +28,28 @@ class HrUpdateRequest(models.Model):
         ('refused', 'Từ chối')
     ], default='draft', tracking=True)
 
-    # Nút Gửi duyệt (Nhân viên/Quản lý thực hiện)
+    # -----------------------------------------------------------
+    # 1. NÚT GỬI YÊU CẦU (Đã phân luồng tự động)
+    # -----------------------------------------------------------
     def action_submit(self):
         for rec in self:
-            rec.state = 'waiting'
-            rec.message_post(body="🚀 Đã gửi yêu cầu. Chờ phòng Nhân sự phê duyệt.")
+            if rec.request_type == 'violation':
+                # Nếu là Vi phạm: Gọi thẳng hàm Duyệt để bỏ qua bước Chờ
+                rec.action_approve()
+            else:
+                # Nếu là Cập nhật hồ sơ: Chuyển sang trạng thái chờ HR duyệt
+                rec.state = 'waiting'
+                rec.message_post(body="🚀 Đã gửi yêu cầu. Chờ phòng Nhân sự phê duyệt.")
 
-    # Nút Phê duyệt (HR thực hiện - Xử lý đa nhiệm)
+    # -----------------------------------------------------------
+    # 2. NÚT PHÊ DUYỆT (Xử lý lưu dữ liệu và Thông báo)
+    # -----------------------------------------------------------
     def action_approve(self):
         for rec in self:
             # NHÁNH 1: TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU SANG MODULE NHÂN SỰ
             if rec.request_type == 'profile':
                 update_data = {}
                 
-                # Kiểm tra xem ô nào có nhập dữ liệu thì mới đưa vào giỏ hàng update_data
                 if rec.new_department_id:
                     update_data['department_id'] = rec.new_department_id.id
                 if rec.new_job_id:
@@ -53,24 +61,29 @@ class HrUpdateRequest(models.Model):
                 if rec.new_work_phone:
                     update_data['work_phone'] = rec.new_work_phone
                 
-                # Thực thi cập nhật thẳng vào Database nhân viên trong 1 lệnh duy nhất
                 if update_data:
                     rec.employee_id.write(update_data)
                 
-                rec.employee_id.message_post(body=f"🔄 Hệ thống đã tự động đồng bộ hồ sơ từ phiếu yêu cầu.")
+                rec.employee_id.message_post(body="🔄 Hệ thống đã tự động đồng bộ hồ sơ từ phiếu yêu cầu.")
+                rec.message_post(body="✅ Phê duyệt thành công. Dữ liệu đã ĐỒNG BỘ vào hồ sơ gốc!")
 
-            # NHÁNH 2: Lưu dữ liệu vi phạm
+            # NHÁNH 2: LƯU VI PHẠM & BÁO CHO NHÂN VIÊN
             if rec.request_type == 'violation':
                 # Ghi nối thêm vi phạm vào phần Ghi chú của nhân viên
                 rec.employee_id.notes = (rec.employee_id.notes or "") + f"\n- Vi phạm: {rec.content}"
+                
+                # Bắn thông báo thẳng vào hồ sơ nhân viên (Nhân viên sẽ nhận được email/thông báo góc phải)
+                rec.employee_id.message_post(body=f"⚠️ CẢNH BÁO VI PHẠM: Bạn vừa bị ghi nhận lỗi: '{rec.content}'. Vui lòng kiểm tra lại!")
+                
+                rec.message_post(body="🚩 Vi phạm đã được ghi nhận trực tiếp vào hồ sơ và đã gửi thông báo cho nhân viên.")
 
+            # Đổi trạng thái phiếu thành Đã phê duyệt
             rec.state = 'approved'
-            # TỰ ĐỘNG GỬI THÔNG BÁO HOÀN TẤT
-            rec.message_post(body="✅ Phê duyệt thành công. Dữ liệu đã ĐỒNG BỘ vào hồ sơ gốc!")
 
-    # Nút Từ chối
-    def action_refuse(self):
+    # -----------------------------------------------------------
+    # 3. NÚT TỪ CHỐI (ĐÃ ĐỔI TÊN THÀNH action_reject ĐỂ TRÁNH LỖI)
+    # -----------------------------------------------------------
+    def action_reject(self):
         for rec in self:
             rec.state = 'refused'
-            # TỰ ĐỘNG GỬI THÔNG BÁO TỪ CHỐI
             rec.message_post(body="❌ Yêu cầu bị từ chối do dữ liệu không hợp lệ.")
