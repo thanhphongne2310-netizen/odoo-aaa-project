@@ -22,25 +22,6 @@ class KpiRecord(models.Model):
         ('approved', 'Đã duyệt')
     ], default='draft', tracking=True)
 
-    @api.depends('line_ids.revenue', 'line_ids.commission_amount')
-    def _compute_totals(self):
-        for rec in self:
-            rec.actual_revenue = sum(line.revenue for line in rec.line_ids)
-            rec.total_commission = sum(line.commission_amount for line in rec.line_ids)
-
-# Lớp con lưu trữ từng dòng hợp đồng bảo hiểm
-class KpiRecordLine(models.Model):
-    _name = 'kpi.record.line'
-    _description = 'Dòng chi tiết doanh thu bảo hiểm'
-
-    kpi_id = fields.Many2one('kpi.record', string='Phiếu KPI gốc', ondelete='cascade')
-    
-    product_code = fields.Char(string='Mã Sản phẩm')
-    contract_number = fields.Char(string='Số hợp đồng')
-    revenue = fields.Float(string='Phí gốc')
-    commission_rate = fields.Float(string='Tỷ lệ HH (%)')
-    commission_amount = fields.Float(string='Tiền hoa hồng', compute='_compute_line_commission', store=True)
-
 # ... (các đoạn code ở trên giữ nguyên) ...
 
     @api.depends('line_ids.revenue', 'line_ids.commission_amount')
@@ -70,3 +51,21 @@ class KpiRecordLine(models.Model):
 # Lớp con lưu trữ từng dòng hợp đồng bảo hiểm (Giữ nguyên như cũ)
 class KpiRecordLine(models.Model):
     # ...
+
+# Lớp con lưu trữ từng dòng hợp đồng bảo hiểm
+class KpiRecordLine(models.Model):
+    _name = 'kpi.record.line'
+    _description = 'Dòng chi tiết doanh thu bảo hiểm'
+
+    kpi_id = fields.Many2one('kpi.record', string='Phiếu KPI gốc', ondelete='cascade')
+    
+    product_code = fields.Char(string='Mã Sản phẩm')
+    contract_number = fields.Char(string='Số hợp đồng')
+    revenue = fields.Float(string='Phí gốc')
+    commission_rate = fields.Float(string='Tỷ lệ HH (%)')
+    commission_amount = fields.Float(string='Tiền hoa hồng', compute='_compute_line_commission', store=True)
+
+    @api.depends('revenue', 'commission_rate')
+    def _compute_line_commission(self):
+        for line in self:
+            line.commission_amount = line.revenue * (line.commission_rate / 100.0)
