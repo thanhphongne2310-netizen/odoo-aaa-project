@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_payslip_form_inherit_approval" model="ir.ui.view">
+        <field name="name">hr.payslip.form.inherit.approval</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="om_hr_payroll.view_hr_payslip_form"/> 
+        
+        <field name="arch" type="xml">
+            
+            <xpath expr="//header" position="inside">
+                <button name="action_submit_director" string="Trình Giám đốc" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                
+                <button name="action_director_approve" string="Giám đốc Duyệt" type="object" class="btn-success" invisible="state != 'waiting_director'" groups="base.group_erp_manager"/>
+                <button name="action_director_reject" string="Từ chối" type="object" class="btn-danger" invisible="state != 'waiting_director'" groups="base.group_erp_manager"/>
+            </xpath>
+
+            <xpath expr="//field[@name='state']" position="replace">
+                <field name="state" widget="statusbar" statusbar_visible="draft,waiting_director,done"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>
