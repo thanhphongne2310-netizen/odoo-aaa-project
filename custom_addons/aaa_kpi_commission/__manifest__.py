@@ -1,5 +1,5 @@
 {
-    'name': 'AAA KPI Commission',
+    'name': 'Hoa Hồng',  # Thay đổi dòng này,
     'version': '1.0',
     'summary': 'Quản lý KPI và Doanh thu Hoa hồng cho công ty AAA',
     'depends': ['base', 'hr','mail'],
