@@ -9,10 +9,8 @@ class KpiRecord(models.Model):
     employee_id = fields.Many2one('hr.employee', string='Nhân viên', required=True, tracking=True)
     department_id = fields.Many2one('hr.department', string='Phòng ban', related='employee_id.department_id', store=True)
     
-    # Quan hệ One2many để chứa danh sách các đơn bảo hiểm (Detail)
     line_ids = fields.One2many('kpi.record.line', 'kpi_id', string='Chi tiết doanh thu')
 
-    # Các trường tổng hợp (Tổng doanh thu và Tổng hoa hồng)
     actual_revenue = fields.Float(string='Tổng phí bảo hiểm', compute='_compute_totals', store=True, tracking=True)
     total_commission = fields.Float(string='Tổng hoa hồng thực nhận', compute='_compute_totals', store=True, tracking=True)
 
@@ -22,17 +20,13 @@ class KpiRecord(models.Model):
         ('approved', 'Đã duyệt')
     ], default='draft', tracking=True)
 
-# ... (các đoạn code ở trên giữ nguyên) ...
-
     @api.depends('line_ids.revenue', 'line_ids.commission_amount')
     def _compute_totals(self):
         for rec in self:
             rec.actual_revenue = sum(line.revenue for line in rec.line_ids)
             rec.total_commission = sum(line.commission_amount for line in rec.line_ids)
 
-    # =========================================================
-    # THÊM 3 HÀM DƯỚI ĐÂY ĐỂ ODOO NHẬN DIỆN ĐƯỢC NÚT BẤM
-    # =========================================================
+    # 3 HÀM XỬ LÝ NÚT BẤM (Đã được căn lề chuẩn)
     def action_submit(self):
         for rec in self:
             rec.state = 'waiting'
@@ -45,14 +39,10 @@ class KpiRecord(models.Model):
 
     def action_reject(self):
         for rec in self:
-            rec.state = 'draft' # Đẩy về lại trạng thái Nháp để kế toán sửa lại file
+            rec.state = 'draft' 
             rec.message_post(body="❌ Bảng kê bị từ chối. Vui lòng kiểm tra lại số liệu Excel.")
 
-# Lớp con lưu trữ từng dòng hợp đồng bảo hiểm (Giữ nguyên như cũ)
-class KpiRecordLine(models.Model):
-    # ...
-
-# Lớp con lưu trữ từng dòng hợp đồng bảo hiểm
+# LỚP CON (Chi tiết dòng)
 class KpiRecordLine(models.Model):
     _name = 'kpi.record.line'
     _description = 'Dòng chi tiết doanh thu bảo hiểm'
