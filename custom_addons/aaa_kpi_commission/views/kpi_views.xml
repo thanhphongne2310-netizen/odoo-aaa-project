@@ -20,21 +20,33 @@
     <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved"/>
 </header>
 
-                <sheet>
-                    <group>
-                        <group>
-                            <field name="employee_id"/>
-                            <field name="department_id"/>
-                            <field name="name" placeholder="VD: 03/2026"/>
-                        </group>
-                        <group>
-                            <field name="actual_revenue"/>
-                            <field name="target_revenue"/>
-                            <field name="commission_rate"/>
-                            <field name="commission_amount"/>
-                        </group>
-                    </group>
-                </sheet> 
+<sheet>
+    <group>
+        <group>
+            <field name="employee_id"/>
+            <field name="department_id"/>
+            <field name="name" placeholder="VD: 03/2026"/>
+        </group>
+        <group>
+            <field name="actual_revenue" readonly="1" force_save="1"/>
+            <field name="total_commission" readonly="1" force_save="1"/>
+        </group>
+    </group>
+
+    <notebook>
+        <page string="Danh sách Hợp đồng bảo hiểm">
+            <field name="line_ids">
+                <tree editable="bottom">
+                    <field name="contract_number"/>
+                    <field name="product_code"/>
+                    <field name="revenue" sum="Tổng phí"/>
+                    <field name="commission_rate"/>
+                    <field name="commission_amount" sum="Tổng HH"/>
+                </tree>
+            </field>
+        </page>
+    </notebook>
+</sheet>
 
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>

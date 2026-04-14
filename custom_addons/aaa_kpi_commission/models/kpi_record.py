@@ -1,58 +1,47 @@
 from odoo import models, fields, api
 
-class KpiCommission(models.Model):
-    _name = 'kpi.commission'
-    _description = 'Quản lý KPI'
-
-    # KẾ THỪA TÍNH NĂNG CHATTER (GỬI TIN NHẮN & LỊCH SỬ) CỦA ODOO
+class KpiRecord(models.Model):
+    _name = 'kpi.record'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _description = 'Báo cáo Doanh thu và Hoa hồng KPI'
 
-    # 1. Khai báo trường Trạng thái với 3 bước
-    state = fields.Selection([
-        ('draft', 'Nháp (Draft)'),
-        ('waiting', 'Chờ duyệt (Waiting)'),
-        ('approved', 'Đã duyệt (Approved)')
-    ], string='Trạng thái', default='draft', tracking=True)
-
-    # Thêm tracking=True để tự động ghi log khi có người sửa dữ liệu
-    name = fields.Char(string='Kỳ đánh giá', required=True, help="Ví dụ: 03/2026")
+    name = fields.Char(string='Kỳ đánh giá', required=True, tracking=True)
     employee_id = fields.Many2one('hr.employee', string='Nhân viên', required=True, tracking=True)
-    department_id = fields.Many2one(related='employee_id.department_id', string='Phòng ban', store=True)
-    actual_revenue = fields.Float(string='Doanh thu thực tế', required=True, default=0.0, tracking=True)
-    target_revenue = fields.Float(string='Chỉ tiêu Doanh thu', required=True, default=40000000.0, tracking=True)
-    commission_rate = fields.Float(string='Tỷ lệ Hoa hồng (%)', default=5.0)
+    department_id = fields.Many2one('hr.department', string='Phòng ban', related='employee_id.department_id', store=True)
     
-    # Trường tự động tính toán
-    commission_amount = fields.Float(string='Tiền Hoa hồng', compute='_compute_commission', store=True, tracking=True)
+    # Quan hệ One2many để chứa danh sách các đơn bảo hiểm (Detail)
+    line_ids = fields.One2many('kpi.record.line', 'kpi_id', string='Chi tiết doanh thu')
 
-    # --- ĐOẠN HÀM TÍNH TOÁN ---
-    @api.depends('actual_revenue', 'target_revenue', 'commission_rate')
-    def _compute_commission(self):
-        for record in self:
-            # Nếu Doanh thu thực tế >= Chỉ tiêu
-            if record.actual_revenue >= record.target_revenue and record.target_revenue > 0:
-                # Tính hoa hồng = Doanh thu thực tế * Tỷ lệ %
-                record.commission_amount = record.actual_revenue * (record.commission_rate / 100.0)
-            else:
-                # Không đạt thì tiền hoa hồng = 0
-                record.commission_amount = 0.0
-    # -----------------------------------------------------
+    # Các trường tổng hợp (Tổng doanh thu và Tổng hoa hồng)
+    actual_revenue = fields.Float(string='Tổng phí bảo hiểm', compute='_compute_totals', store=True, tracking=True)
+    total_commission = fields.Float(string='Tổng hoa hồng thực nhận', compute='_compute_totals', store=True, tracking=True)
 
-    # 2. Khai báo các hàm để nút bấm gọi tới (Thanh trạng thái)
-    def action_submit(self):
-        for record in self:
-            record.state = 'waiting'
+    state = fields.Selection([
+        ('draft', 'Nháp'),
+        ('waiting', 'Chờ phê duyệt'),
+        ('approved', 'Đã duyệt')
+    ], default='draft', tracking=True)
 
-    def action_approve(self):
-        for record in self:
-            record.state = 'approved'
+    @api.depends('line_ids.revenue', 'line_ids.commission_amount')
+    def _compute_totals(self):
+        for rec in self:
+            rec.actual_revenue = sum(line.revenue for line in rec.line_ids)
+            rec.total_commission = sum(line.commission_amount for line in rec.line_ids)
 
-    def action_reject(self):
-        for record in self:
-            record.state = 'draft'
-            
-            # TỰ ĐỘNG GỬI THÔNG BÁO XUỐNG CHATTER KHI TỪ CHỐI
-            record.message_post(
-                body="⚠️ Quản lý đã TỪ CHỐI phiếu KPI này. Vui lòng kiểm tra lại số liệu và gửi duyệt lại!",
-                subject="Thông báo từ chối KPI"
-            )
+# Lớp con lưu trữ từng dòng hợp đồng bảo hiểm
+class KpiRecordLine(models.Model):
+    _name = 'kpi.record.line'
+    _description = 'Dòng chi tiết doanh thu bảo hiểm'
+
+    kpi_id = fields.Many2one('kpi.record', string='Phiếu KPI gốc', ondelete='cascade')
+    
+    product_code = fields.Char(string='Mã Sản phẩm')
+    contract_number = fields.Char(string='Số hợp đồng')
+    revenue = fields.Float(string='Phí gốc')
+    commission_rate = fields.Float(string='Tỷ lệ HH (%)')
+    commission_amount = fields.Float(string='Tiền hoa hồng', compute='_compute_line_commission', store=True)
+
+    @api.depends('revenue', 'commission_rate')
+    def _compute_line_commission(self):
+        for line in self:
+            line.commission_amount = line.revenue * (line.commission_rate / 100.0)
