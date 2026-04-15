@@ -14,17 +14,28 @@ class KpiRecord(models.Model):
     actual_revenue = fields.Float(string='Tổng phí bảo hiểm', compute='_compute_totals', store=True, tracking=True)
     total_commission = fields.Float(string='Tổng hoa hồng thực nhận', compute='_compute_totals', store=True, tracking=True)
 
+    # --- 2 TRƯỜNG MỚI ĐƯỢC THÊM VÀO ĐÂY ĐỂ ĐO LƯỜNG KPI ---
+    target_revenue = fields.Float(string='Chỉ tiêu doanh thu', required=True, default=10000000, tracking=True)
+    kpi_percentage = fields.Float(string='Tỷ lệ hoàn thành KPI (%)', compute='_compute_totals', store=True)
+
     state = fields.Selection([
         ('draft', 'Nháp'),
         ('waiting', 'Chờ phê duyệt'),
         ('approved', 'Đã duyệt')
     ], default='draft', tracking=True)
 
-    @api.depends('line_ids.revenue', 'line_ids.commission_amount')
+    # --- ĐÃ CẬP NHẬT LẠI HÀM TÍNH TOÁN ---
+    @api.depends('line_ids.revenue', 'line_ids.commission_amount', 'target_revenue')
     def _compute_totals(self):
         for rec in self:
             rec.actual_revenue = sum(line.revenue for line in rec.line_ids)
             rec.total_commission = sum(line.commission_amount for line in rec.line_ids)
+            
+            # Tự động tính phần trăm KPI (tránh lỗi chia cho 0 nếu chỉ tiêu bằng 0)
+            if rec.target_revenue > 0:
+                rec.kpi_percentage = (rec.actual_revenue / rec.target_revenue) * 100
+            else:
+                rec.kpi_percentage = 0.0
 
     # 3 HÀM XỬ LÝ NÚT BẤM (Đã được căn lề chuẩn)
     def action_submit(self):
