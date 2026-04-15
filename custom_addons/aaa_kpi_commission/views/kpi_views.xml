@@ -2,7 +2,8 @@
 <odoo>
     <record id="view_kpi_record_form" model="ir.ui.view">
         <field name="name">kpi.record.form</field>
-        <field name="model">kpi.record</field> <field name="arch" type="xml">
+        <field name="model">kpi.record</field> 
+        <field name="arch" type="xml">
             <form string="Phiếu KPI">
                 <header>
                     <button name="action_submit" string="Gửi duyệt" type="object" class="oe_highlight" invisible="state != 'draft'"/>
@@ -21,7 +22,9 @@
                             <field name="name" placeholder="VD: 03/2026"/>
                         </group>
                         <group>
+                            <field name="target_revenue"/>
                             <field name="actual_revenue" readonly="1" force_save="1"/>
+                            <field name="kpi_percentage" widget="progressbar"/>
                             <field name="total_commission" readonly="1" force_save="1"/>
                         </group>
                     </group>
@@ -52,12 +55,15 @@
 
     <record id="view_kpi_record_tree" model="ir.ui.view">
         <field name="name">kpi.record.tree</field>
-        <field name="model">kpi.record</field> <field name="arch" type="xml">
+        <field name="model">kpi.record</field> 
+        <field name="arch" type="xml">
             <tree string="Danh sách KPI" default_order="id desc">
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="department_id"/>
+                <field name="target_revenue" optional="show"/>
                 <field name="actual_revenue"/>
+                <field name="kpi_percentage" widget="progressbar"/>
                 <field name="total_commission"/>
                 <field name="state" widget="badge" 
                        decoration-muted="state == 'draft'"
@@ -69,7 +75,8 @@
 
     <record id="action_kpi_record" model="ir.actions.act_window">
         <field name="name">Quản lý Doanh thu KPI</field>
-        <field name="res_model">kpi.record</field> <field name="view_mode">tree,form</field>
+        <field name="res_model">kpi.record</field> 
+        <field name="view_mode">tree,form</field>
     </record>
 
     <menuitem id="menu_kpi_root" name="Hoa Hồng" sequence="10"/>
